@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevForge — Forge Your Digital Legacy</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════
+   RESET & VARIABLES
+═══════════════════════════════════════════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#c9a84c;--gold2:#f0d080;--gold3:#ffd700;
+  --cyan:#00d4ff;--cyan2:#0099cc;
+  --bg:#050810;--bg2:#080d18;--bg3:#0c1422;
+  --text:#d0c8b8;--dim:#7888a0;
+  --bg2:#09101c;
+  --bg:#050810;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Text',Georgia,serif;overflow-x:hidden;cursor:none}
+
+/* ═══════════════════════════════════════════════════════
+   CURSOR
+═══════════════════════════════════════════════════════ */
+#cur{position:fixed;width:10px;height:10px;background:var(--gold);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);box-shadow:0 0 12px var(--gold3),0 0 28px rgba(255,215,0,.3);transition:transform .1s,width .2s,height .2s}
+#cur2{position:fixed;width:34px;height:34px;border:1px solid rgba(201,168,76,.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all .18s ease}
+
+/* ═══════════════════════════════════════════════════════
+   PARTICLES
+═══════════════════════════════════════════════════════ */
+#pc{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.45}
+
+/* ═══════════════════════════════════════════════════════
+   MUSIC PLAYER
+═══════════════════════════════════════════════════════ */
+#mp{position:fixed;bottom:24px;right:24px;z-index:800;display:flex;flex-direction:column;align-items:flex-end;gap:0}
+.mp-btn{width:48px;height:48px;background:linear-gradient(135deg,#0e1828,#080e1a);border:1px solid rgba(201,168,76,.4);color:var(--gold);display:flex;align-items:center;justify-content:center;cursor:pointer;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);transition:all .25s}
+.mp-btn:hover{background:rgba(201,168,76,.12);box-shadow:0 0 20px rgba(255,215,0,.25)}
+.mp-body{width:280px;background:linear-gradient(160deg,rgba(10,18,30,.98),rgba(6,10,18,.99));border:1px solid rgba(201,168,76,.35);border-bottom:none;padding:16px;transform-origin:bottom right;transition:opacity .3s,transform .3s;margin-bottom:0}
+#mp.closed .mp-body{opacity:0;transform:scale(.8) translateY(12px);pointer-events:none}
+#mp.open .mp-body{opacity:1;transform:scale(1) translateY(0)}
+.viz{display:flex;align-items:flex-end;gap:3px;height:26px;margin-bottom:12px;justify-content:center}
+.viz span{display:block;width:4px;background:linear-gradient(180deg,var(--gold3),var(--gold));border-radius:2px;animation:vb var(--d,.8s) ease-in-out infinite alternate var(--dl,0s);animation-play-state:paused}
+@keyframes vb{from{height:3px}to{height:var(--h,14px)}}
+.viz.on span{animation-play-state:running}
+.mp-info{text-align:center;margin-bottom:10px}
+.mp-track{font-family:'Cinzel',serif;font-size:.75rem;letter-spacing:.08em;color:var(--gold2)}
+.mp-artist{font-size:.62rem;letter-spacing:.1em;color:var(--dim);margin-top:2px}
+.mp-ctrl{display:flex;justify-content:center;gap:14px;margin-bottom:10px}
+.mp-ctrl button{background:none;border:none;color:var(--dim);font-size:1.1rem;cursor:pointer;padding:4px 8px;transition:color .2s,transform .2s}
+.mp-ctrl button:hover{color:var(--gold2);transform:scale(1.25)}
+#mpPlay{color:var(--gold);font-size:1.3rem}
+.mp-prog{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.mp-prog span{font-size:.58rem;color:var(--dim);min-width:28px;font-family:monospace}
+.mp-bar{flex:1;height:3px;background:rgba(255,255,255,.1);cursor:pointer;border-radius:2px;overflow:hidden}
+.mp-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--gold3));border-radius:2px;transition:width .1s}
+.mp-vol{display:flex;align-items:center;gap:8px;color:var(--dim)}
+#mpVol{flex:1;-webkit-appearance:none;height:3px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer}
+#mpVol::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;background:var(--gold);border-radius:50%}
+
+/* ═══════════════════════════════════════════════════════
+   NAVBAR
+═══════════════════════════════════════════════════════ */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:60px;background:linear-gradient(180deg,rgba(5,8,16,.98),rgba(5,8,16,.85));border-bottom:1px solid rgba(201,168,76,.3);backdrop-filter:blur(16px);transition:all .3s}
+nav.scrolled{background:rgba(5,8,16,.99);box-shadow:0 4px 30px rgba(0,0,0,.6)}
+.logo{font-family:'Cinzel Decorative',serif;font-size:1rem;letter-spacing:.15em;color:var(--gold2);text-shadow:0 0 20px rgba(255,215,0,.5);display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:32px;list-style:none}
+.nav-links a{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.12em;color:var(--dim);text-decoration:none;position:relative;padding-bottom:4px;transition:color .25s}
+.nav-links a::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:var(--gold);transform:scaleX(0);transform-origin:center;transition:transform .3s}
+.nav-links a:hover,.nav-links a.active{color:var(--gold2)}
+.nav-links a:hover::after,.nav-links a.active::after{transform:scaleX(1)}
+.nav-r{display:flex;align-items:center;gap:18px}
+.btn-login{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.1em;color:var(--dim);text-decoration:none;transition:color .25s}
+.btn-login:hover{color:var(--gold2)}
+.btn-order-nav{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.12em;font-weight:700;color:#050810;background:linear-gradient(135deg,var(--gold2) 0%,var(--gold) 60%,#9a6820 100%);padding:9px 22px;text-decoration:none;clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);position:relative;overflow:hidden;transition:filter .25s,transform .2s}
+.btn-order-nav::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);transition:left .45s}
+.btn-order-nav:hover::before{left:100%}
+.btn-order-nav:hover{filter:brightness(1.15);transform:translateY(-1px)}
+.burger{display:none;background:none;border:none;color:var(--gold);font-size:1.4rem;cursor:pointer}
+.mob-menu{display:none;flex-direction:column;position:fixed;top:60px;left:0;right:0;background:rgba(5,8,16,.98);border-bottom:1px solid rgba(201,168,76,.25);padding:16px 28px;z-index:499}
+.mob-menu.open{display:flex}
+.mob-menu a{font-family:'Cinzel',serif;font-size:.8rem;letter-spacing:.1em;color:var(--dim);text-decoration:none;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);transition:color .2s}
+.mob-menu a:hover{color:var(--gold2)}
+
+/* ═══════════════════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════════════════ */
+.hero{position:relative;height:100vh;min-height:650px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hbg{position:absolute;inset:0;background:radial-gradient(ellipse 90% 70% at 50% 20%,rgba(0,20,55,.92) 0%,transparent 70%),radial-gradient(ellipse 70% 90% at 10% 90%,rgba(0,10,35,.7) 0%,transparent 60%),radial-gradient(ellipse 70% 90% at 90% 90%,rgba(12,5,28,.7) 0%,transparent 60%),linear-gradient(180deg,#060a18 0%,#0b1428 50%,#04080e 100%)}
+.fog{position:absolute;inset:0;pointer-events:none}
+.fog::before,.fog::after{content:'';position:absolute;bottom:0;left:0;right:0;height:45%;background:radial-gradient(ellipse 80% 100% at 50% 100%,rgba(0,35,80,.28) 0%,transparent 70%);animation:fga 22s ease-in-out infinite alternate}
+.fog::after{height:30%;opacity:.5;animation-name:fgb;animation-duration:30s}
+@keyframes fga{from{transform:translateX(-4%)}to{transform:translateX(4%)}}
+@keyframes fgb{from{transform:translateX(3%)}to{transform:translateX(-3%)}}
+.castle{position:absolute;bottom:0;left:0;right:0;height:68%;background:linear-gradient(180deg,transparent 0%,rgba(5,8,15,.45) 30%,rgba(3,5,10,.92) 100%);clip-path:polygon(0% 100%,0% 72%,2% 70%,2% 56%,4% 53%,4% 62%,6% 62%,6% 46%,7% 44%,7% 52%,9% 52%,9% 38%,11% 35%,11% 44%,13% 44%,13% 56%,14% 56%,14% 40%,16% 37%,17% 28%,18% 37%,19% 40%,20% 38%,20% 24%,21% 21%,22% 24%,22% 38%,24% 34%,25% 30%,26% 21%,27% 14%,28% 9%,29% 5%,30% 9%,31% 14%,32% 21%,33% 28%,34% 34%,35% 37%,35% 24%,36% 21%,37% 24%,37% 37%,39% 38%,39% 30%,41% 26%,43% 24%,44% 26%,46% 30%,48% 35%,50% 28%,52% 33%,54% 36%,55% 30%,56% 26%,58% 24%,60% 26%,62% 30%,62% 21%,63% 18%,64% 21%,65% 30%,67% 28%,68% 21%,69% 17%,70% 12%,71% 9%,72% 12%,73% 17%,74% 23%,75% 30%,76% 33%,77% 36%,77% 24%,78% 21%,79% 24%,79% 34%,80% 34%,81% 28%,83% 24%,85% 28%,85% 37%,86% 37%,86% 34%,88% 32%,88% 44%,90% 44%,90% 38%,92% 35%,92% 52%,93% 52%,93% 44%,95% 40%,95% 56%,97% 56%,97% 62%,100% 64%,100% 100%)}
+#stars{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.star{position:absolute;background:#fff;border-radius:50%;animation:twk var(--d) ease-in-out infinite alternate var(--dl),drift var(--dd) ease-in-out infinite alternate var(--dld)}
+@keyframes twk{from{opacity:.08;transform:scale(.5)}to{opacity:1;transform:scale(1.5)}}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(var(--dx),var(--dy))}}
+.shooting-star{position:absolute;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.9) 50%,rgba(255,215,0,.6));border-radius:1px;animation:shoot var(--sd) linear infinite var(--sdl);opacity:0;transform-origin:right center}
+@keyframes shoot{0%{opacity:0;transform:translateX(0) rotate(var(--ang))}5%{opacity:1}80%{opacity:.6}100%{opacity:0;transform:translateX(calc(var(--sw) * -1px)) rotate(var(--ang))}}
+.rune{position:absolute;font-size:1.3rem;color:rgba(201,168,76,.18);pointer-events:none;animation:rdrift var(--rd,14s) ease-in-out infinite alternate;text-shadow:0 0 18px var(--gold)}
+.r1{left:8%;top:28%;--rd:14s;animation-delay:0s}
+.r2{left:14%;top:62%;--rd:20s;animation-delay:-7s}
+.r3{right:9%;top:32%;--rd:17s;animation-delay:-3s}
+.r4{right:16%;top:68%;--rd:23s;animation-delay:-10s}
+@keyframes rdrift{from{transform:translateY(0) rotate(0deg);opacity:.12}to{transform:translateY(-28px) rotate(12deg);opacity:.32}}
+.hcontent{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;text-align:center}
+.crown-wrap{position:relative;margin-bottom:-6px}
+.crown{width:108px;filter:drop-shadow(0 0 28px rgba(190,215,255,.85));animation:cfloat 4s ease-in-out infinite,fup .8s ease both}
+@keyframes cfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-13px)}}
+.crown-halo{position:absolute;inset:-18px;border-radius:50%;background:radial-gradient(circle,rgba(160,190,255,.18) 0%,transparent 70%);animation:hpulse 3.5s ease-in-out infinite}
+@keyframes hpulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.25);opacity:1}}
+.htitle{font-family:'Cinzel Decorative',serif;font-size:clamp(3rem,9vw,7.5rem);font-weight:700;letter-spacing:.07em;color:transparent;background:linear-gradient(180deg,#fff 0%,#f0e0a0 25%,var(--gold) 60%,#7a5010 100%);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 0 40px rgba(255,215,0,.6));animation:tglow 3s ease-in-out infinite alternate;display:flex}
+@keyframes tglow{from{filter:drop-shadow(0 0 25px rgba(255,215,0,.5))}to{filter:drop-shadow(0 0 55px rgba(255,215,0,.9))}}
+.lt{display:inline-block;animation:ldrop 1s cubic-bezier(.34,1.56,.64,1) calc(var(--i)*.06s) both}
+@keyframes ldrop{from{opacity:0;transform:translateY(-40px) rotate(-8deg)}to{opacity:1;transform:none}}
+.htag{display:flex;align-items:center;gap:14px;margin-top:16px;font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.25em;color:var(--dim);animation:fup .8s .6s ease both}
+.ol{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+.ol.r{background:linear-gradient(90deg,var(--gold),transparent)}
+.hbadges{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:22px;animation:fup .8s .75s ease both}
+.badge{font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.1em;color:var(--dim);border:1px solid rgba(201,168,76,.3);padding:5px 13px;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);background:rgba(201,168,76,.04)}
+.hcta{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:34px;animation:fup .8s .9s ease both}
+.btn-primary{font-family:'Cinzel',serif;font-size:.78rem;letter-spacing:.12em;font-weight:700;color:#050810;background:linear-gradient(135deg,var(--gold2) 0%,var(--gold) 60%,#9a6820 100%);padding:14px 32px;text-decoration:none;clip-path:polygon(12px 0%,100% 0%,calc(100% - 12px) 100%,0% 100%);position:relative;overflow:hidden;transition:filter .25s,transform .2s,box-shadow .25s;display:flex;align-items:center;gap:8px}
+.btn-primary::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);transition:left .5s}
+.btn-primary:hover::before{left:100%}
+.btn-primary:hover{filter:brightness(1.15);transform:translateY(-2px);box-shadow:0 8px 28px rgba(255,215,0,.4)}
+.btn-secondary{font-family:'Cinzel',serif;font-size:.78rem;letter-spacing:.12em;color:var(--gold2);border:1px solid rgba(201,168,76,.4);padding:13px 32px;text-decoration:none;clip-path:polygon(12px 0%,100% 0%,calc(100% - 12px) 100%,0% 100%);transition:all .25s}
+.btn-secondary:hover{background:rgba(201,168,76,.1);box-shadow:0 4px 20px rgba(255,215,0,.18);transform:translateY(-2px)}
+.scroll-ind{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;z-index:10}
+.s-line{width:1px;height:48px;background:linear-gradient(180deg,var(--gold),transparent);animation:sline 2s ease-in-out infinite}
+@keyframes sline{0%,100%{opacity:.3;transform:scaleY(.5)}50%{opacity:.9;transform:scaleY(1)}}
+.scroll-ind span{font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.2em;color:var(--dim);opacity:.45}
+
+/* ═══════════════════════════════════════════════════════
+   STATS BAR
+═══════════════════════════════════════════════════════ */
+.stats{background:linear-gradient(90deg,var(--bg) 0%,#0c1422 50%,var(--bg) 100%);border-top:1px solid rgba(201,168,76,.3);border-bottom:1px solid rgba(201,168,76,.3);padding:26px 40px;display:flex;align-items:center;justify-content:center;gap:36px;flex-wrap:wrap}
+.sitem{display:flex;flex-direction:column;align-items:center;gap:4px}
+.snum-wrap{display:flex;align-items:flex-start;gap:1px}
+.snum{font-family:'Cinzel',serif;font-size:1.8rem;font-weight:700;color:var(--gold2);line-height:1}
+.splus{font-family:'Cinzel',serif;font-size:1.2rem;color:var(--gold);line-height:1.2}
+.slabel{font-size:.68rem;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+.sdiv{color:var(--gold);opacity:.35;font-size:.9rem}
+
+/* ═══════════════════════════════════════════════════════
+   SECTIONS
+═══════════════════════════════════════════════════════ */
+section{position:relative;z-index:1;padding:88px 40px 96px}
+section:nth-of-type(odd){background:linear-gradient(180deg,#08101c 0%,var(--bg) 100%)}
+section:nth-of-type(even){background:linear-gradient(180deg,var(--bg) 0%,#08101c 100%)}
+.sec-hd{text-align:center;margin-bottom:60px}
+.sec-pre{font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.3em;color:var(--gold);margin-bottom:12px}
+.sec-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.8rem,4vw,2.7rem);font-weight:400;letter-spacing:.08em;color:var(--gold2);text-shadow:0 0 28px rgba(255,215,0,.3)}
+.title-orn{display:flex;align-items:center;gap:14px;margin:18px auto 0;max-width:280px}
+.tol{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.tdiam{width:8px;height:8px;background:var(--gold);transform:rotate(45deg);flex-shrink:0;box-shadow:0 0 10px var(--gold)}
+
+/* ═══════════════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════════════ */
+.cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:26px;max-width:1080px;margin:0 auto}
+.card{position:relative;background:linear-gradient(160deg,rgba(12,20,34,.96),rgba(7,11,20,.98));border:1px solid rgba(255,255,255,.05);padding:44px 30px 36px;text-align:center;overflow:hidden;transition:transform .4s cubic-bezier(.25,.46,.45,.94),box-shadow .4s;opacity:0;transform:translateY(32px)}
+.card.vis{opacity:1;transform:translateY(0)}
+.card::before{content:'';position:absolute;inset:0;border:1px solid rgba(201,168,76,.3);pointer-events:none;opacity:.5;transition:opacity .3s,border-color .3s}
+.card::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:50%;height:1px;background:linear-gradient(90deg,transparent,var(--gold3),transparent)}
+.card.cgold:hover{transform:translateY(-8px);box-shadow:0 22px 60px rgba(201,168,76,.22),0 0 0 1px var(--gold)}
+.card.ccyan:hover{transform:translateY(-8px);box-shadow:0 22px 60px rgba(0,212,255,.18),0 0 0 1px var(--cyan)}
+.card.cgold:hover::before{opacity:1;border-color:var(--gold)}
+.card.ccyan:hover::before{opacity:1;border-color:var(--cyan)}
+.cglow{position:absolute;inset:0;pointer-events:none}
+.cgold .cglow{background:radial-gradient(ellipse 70% 50% at 50% -20%,rgba(201,168,76,.07) 0%,transparent 60%)}
+.ccyan .cglow{background:radial-gradient(ellipse 70% 50% at 50% -20%,rgba(0,212,255,.05) 0%,transparent 60%)}
+.cn{position:absolute;width:13px;height:13px;border-style:solid}
+.cgold .cn{border-color:var(--gold)}
+.ccyan .cn{border-color:var(--cyan)}
+.cn.tl{top:9px;left:9px;border-width:1px 0 0 1px}
+.cn.tr{top:9px;right:9px;border-width:1px 1px 0 0}
+.cn.bl{bottom:9px;left:9px;border-width:0 0 1px 1px}
+.cn.br{bottom:9px;right:9px;border-width:0 1px 1px 0}
+.cbadge{position:absolute;top:0;right:22px;font-family:'Cinzel',serif;font-size:.52rem;letter-spacing:.14em;color:#050810;background:var(--gold);padding:3px 9px}
+.cicon-wrap{position:relative;display:inline-flex;margin-bottom:18px}
+.cicon{width:62px;height:62px;display:flex;align-items:center;justify-content:center;border:1px solid;position:relative;z-index:1}
+.cgold .cicon{border-color:var(--gold);color:var(--gold)}
+.ccyan .cicon{border-color:var(--cyan);color:var(--cyan)}
+.cring{position:absolute;inset:-7px;border-radius:50%;border:1px solid transparent;animation:rspin 8s linear infinite}
+.cgold .cring{border-color:rgba(201,168,76,.2)}
+.ccyan .cring{border-color:rgba(0,212,255,.15)}
+@keyframes rspin{to{transform:rotate(360deg)}}
+.ctitle{font-family:'Cinzel',serif;font-size:1.12rem;font-weight:600;letter-spacing:.06em;margin-bottom:8px}
+.cgold .ctitle{color:var(--gold2)}
+.ccyan .ctitle{color:var(--cyan)}
+.cprice{margin-bottom:18px}
+.cp-from{font-size:.7rem;color:var(--dim);display:block}
+.cp-val{font-family:'Cinzel',serif;font-size:2rem;font-weight:700;line-height:1.1}
+.cgold .cp-val{color:var(--gold2);text-shadow:0 0 18px rgba(255,215,0,.35)}
+.ccyan .cp-val{color:var(--cyan);text-shadow:0 0 18px rgba(0,212,255,.35)}
+.cfeats{list-style:none;margin-bottom:26px;text-align:left;display:flex;flex-direction:column;gap:7px}
+.cfeats li{font-size:.9rem;color:var(--dim);padding-left:2px}
+.cbtn{display:inline-block;position:relative;overflow:hidden;font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.14em;font-weight:700;padding:11px 30px;text-decoration:none;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);transition:all .25s}
+.cgold .cbtn{color:var(--gold);border:1px solid var(--gold)}
+.cgold .cbtn:hover{background:var(--gold);color:#050810;box-shadow:0 0 24px rgba(255,215,0,.4);transform:translateY(-2px)}
+.ccyan .cbtn{color:var(--cyan);border:1px solid var(--cyan)}
+.ccyan .cbtn:hover{background:var(--cyan);color:#050810;box-shadow:0 0 24px rgba(0,212,255,.35);transform:translateY(-2px)}
+.cshimmer{position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);transition:left .4s}
+.cbtn:hover .cshimmer{left:100%}
+
+/* ═══════════════════════════════════════════════════════
+   PYTHON CODE SECTION
+═══════════════════════════════════════════════════════ */
+.py-section{background:linear-gradient(180deg,#07101c 0%,var(--bg) 100%)!important}
+.tabs{display:flex;gap:4px;justify-content:center;margin-bottom:22px;flex-wrap:wrap}
+.tab{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.1em;color:var(--dim);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);padding:9px 22px;cursor:pointer;transition:all .25s}
+.tab.on{color:var(--gold2);border-color:var(--gold);background:rgba(201,168,76,.07)}
+.tab:hover:not(.on){color:var(--text);border-color:rgba(255,255,255,.15)}
+.cpanels{max-width:840px;margin:0 auto 36px}
+.cpanel{display:none}
+.cpanel.on{display:block}
+.code-hdr{display:flex;align-items:center;gap:10px;background:rgba(6,10,18,.9);border:1px solid rgba(201,168,76,.3);border-bottom:none;padding:10px 14px}
+.dots{display:flex;gap:5px}
+.dots span{width:10px;height:10px;border-radius:50%}
+.dots span:nth-child(1){background:#ff5f57}
+.dots span:nth-child(2){background:#febc2e}
+.dots span:nth-child(3){background:#28c840}
+.fname{flex:1;font-size:.7rem;letter-spacing:.08em;color:var(--dim)}
+.copybtn{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.08em;color:var(--dim);background:none;border:1px solid rgba(255,255,255,.1);padding:4px 10px;cursor:pointer;transition:all .2s}
+.copybtn:hover{color:var(--gold2);border-color:var(--gold)}
+.codeblock{background:rgba(5,9,16,.97);border:1px solid rgba(201,168,76,.3);padding:22px;overflow-x:auto;max-height:370px;overflow-y:auto}
+.codeblock::-webkit-scrollbar{width:4px;height:4px}
+.codeblock::-webkit-scrollbar-thumb{background:rgba(201,168,76,.3)}
+code{font-family:'Courier New',monospace;font-size:.8rem;line-height:1.75;color:#c8d8f0;white-space:pre}
+.kw{color:#c792ea}.fn{color:#82aaff}.st{color:#c3e88d}.co{color:#546e7a;font-style:italic}.nu{color:#f78c6c}.cl{color:#ffcb6b}.de{color:#89ddff}
+.buy-wrap{text-align:center}
+.buy-desc{color:var(--dim);font-size:.95rem;margin-bottom:18px}
+.btn-discord{display:inline-flex;align-items:center;gap:10px;font-family:'Cinzel',serif;font-size:.76rem;letter-spacing:.12em;font-weight:700;color:#fff;background:linear-gradient(135deg,#7289da,#5865f2);padding:14px 36px;text-decoration:none;clip-path:polygon(12px 0%,100% 0%,calc(100% - 12px) 100%,0% 100%);transition:filter .25s,transform .2s,box-shadow .25s}
+.btn-discord:hover{filter:brightness(1.15);transform:translateY(-2px);box-shadow:0 8px 28px rgba(88,101,242,.4)}
+
+/* ═══════════════════════════════════════════════════════
+   CONTACT
+═══════════════════════════════════════════════════════ */
+.cgrid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:22px;max-width:820px;margin:0 auto}
+.ccard{border:1px solid rgba(201,168,76,.3);background:linear-gradient(160deg,rgba(12,20,34,.9),rgba(7,11,20,.95));padding:34px 22px;text-align:center;transition:transform .4s,box-shadow .4s;opacity:0;transform:translateY(20px)}
+.ccard.vis{opacity:1;transform:translateY(0)}
+.ccard:hover{transform:translateY(-6px);box-shadow:0 16px 48px rgba(201,168,76,.13)}
+.cico{font-size:2rem;margin-bottom:12px}
+.ctit{font-family:'Cinzel',serif;font-size:.88rem;letter-spacing:.1em;color:var(--gold2);margin-bottom:9px}
+.cdesc{font-size:.9rem;color:var(--dim);line-height:1.6;margin-bottom:18px}
+.btn-contact{display:inline-block;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.12em;color:var(--gold);border:1px solid rgba(201,168,76,.35);padding:8px 20px;text-decoration:none;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);transition:all .25s}
+.btn-contact:hover{background:rgba(201,168,76,.1);box-shadow:0 0 14px rgba(255,215,0,.18)}
+
+/* ═══════════════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════════════ */
+footer{background:var(--bg);border-top:1px solid rgba(201,168,76,.28);padding:52px 48px 26px}
+.ft{display:flex;gap:44px;flex-wrap:wrap;justify-content:space-between;padding-bottom:36px;border-bottom:1px solid rgba(255,255,255,.05);margin-bottom:26px}
+.fl-logo{font-family:'Cinzel Decorative',serif;font-size:1.25rem;color:var(--gold2);letter-spacing:.1em;text-shadow:0 0 18px rgba(255,215,0,.28);margin-bottom:8px}
+.fl-tag{font-size:.82rem;color:var(--dim)}
+.fl-links{display:flex;gap:44px;flex-wrap:wrap}
+.fl-col{display:flex;flex-direction:column;gap:9px}
+.fl-htitle{font-family:'Cinzel',serif;font-size:.66rem;letter-spacing:.15em;color:var(--gold);margin-bottom:3px}
+.fl-col a{font-size:.83rem;color:var(--dim);text-decoration:none;transition:color .2s}
+.fl-col a:hover{color:var(--gold2)}
+.fl-soc{display:flex;flex-direction:column;gap:12px}
+.srow{display:flex;gap:9px;flex-wrap:wrap}
+.slink{width:37px;height:37px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,168,76,.3);color:var(--dim);text-decoration:none;transition:all .25s}
+.slink:hover{color:var(--gold2);border-color:var(--gold);box-shadow:0 0 14px rgba(255,215,0,.22)}
+.fb{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.fcopy{font-size:.72rem;color:var(--dim)}
+.fdiscord{font-family:'Cinzel',serif;font-size:.66rem;letter-spacing:.12em;color:#fff;background:linear-gradient(135deg,#7289da,#5865f2);padding:8px 18px;text-decoration:none;clip-path:polygon(7px 0%,100% 0%,calc(100% - 7px) 100%,0% 100%);transition:filter .25s,transform .2s}
+.fdiscord:hover{filter:brightness(1.15);transform:translateY(-1px)}
+
+/* ═══════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════ */
+#toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(16px);background:rgba(10,18,30,.97);border:1px solid rgba(201,168,76,.4);color:var(--gold2);font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.1em;padding:11px 26px;z-index:2000;opacity:0;transition:all .3s;pointer-events:none;clip-path:polygon(9px 0%,100% 0%,calc(100% - 9px) 100%,0% 100%)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════════════════ */
+@keyframes fup{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════ */
+@media(max-width:768px){
+  .nav-links,.btn-login{display:none}
+  .burger{display:block}
+  nav{padding:0 22px}
+  .htitle{font-size:clamp(2.5rem,12vw,4.5rem)}
+  .stats{gap:20px;padding:20px}
+  .sdiv:nth-child(4),.sdiv:nth-child(6){display:none}
+  section{padding:60px 18px}
+  footer{padding:44px 22px 22px}
+  .ft{flex-direction:column;gap:28px}
+  #mp{bottom:14px;right:14px}
+  .mp-body{width:256px}
+}
+</style>
+</head>
+<body>
+
+<!-- PARTICLES -->
+<canvas id="pc"></canvas>
+
+<!-- CURSOR -->
+<div id="cur"></div>
+<div id="cur2"></div>
+
+<!-- MUSIC PLAYER -->
+<div id="mp" class="closed">
+  <div class="mp-body">
+    <div class="viz" id="viz">
+      <span style="--h:8px;--d:.7s;--dl:0s"></span>
+      <span style="--h:18px;--d:.9s;--dl:.08s"></span>
+      <span style="--h:12px;--d:.8s;--dl:.16s"></span>
+      <span style="--h:22px;--d:1s;--dl:.05s"></span>
+      <span style="--h:16px;--d:.75s;--dl:.12s"></span>
+      <span style="--h:24px;--d:.95s;--dl:.2s"></span>
+      <span style="--h:14px;--d:.85s;--dl:.07s"></span>
+      <span style="--h:20px;--d:.78s;--dl:.15s"></span>
+      <span style="--h:10px;--d:.92s;--dl:.1s"></span>
+      <span style="--h:18px;--d:.82s;--dl:.18s"></span>
+    </div>
+    <div class="mp-info">
+      <div class="mp-track" id="mpTrack">Dark Fantasy Theme</div>
+      <div class="mp-artist">DevForge OST</div>
+    </div>
+    <div class="mp-ctrl">
+      <button id="mpPrev" title="Précédent">⏮</button>
+      <button id="mpPlay" title="Lecture">▶</button>
+      <button id="mpNext" title="Suivant">⏭</button>
+    </div>
+    <div class="mp-prog">
+      <span id="mpCur">0:00</span>
+      <div class="mp-bar" id="mpBar"><div class="mp-fill" id="mpFill"></div></div>
+      <span id="mpDur">0:00</span>
+    </div>
+    <div class="mp-vol">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07" stroke="currentColor" fill="none" stroke-width="1.5"/></svg>
+      <input type="range" id="mpVol" min="0" max="1" step="0.01" value="0.5">
+    </div>
+    <audio id="aud"></audio>
+  </div>
+  <div class="mp-btn" id="mpToggle" title="Musique">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+    </svg>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav id="nav">
+  <a href="#hero" class="logo">
+    <svg width="17" height="13" viewBox="0 0 100 70" fill="none"><path d="M10 55L90 55L85 35L70 50L50 10L30 50L15 35Z" stroke="rgba(200,168,76,.9)" stroke-width="3" stroke-linejoin="round"/><rect x="8" y="55" width="84" height="8" rx="1" stroke="rgba(200,168,76,.7)" stroke-width="2"/></svg>
+    DevForge
+  </a>
+  <ul class="nav-links">
+    <li><a href="#hero" class="active">Home</a></li>
+    <li><a href="#services">Website</a></li>
+    <li><a href="#python">Finances</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#contact">Contacts</a></li>
+  </ul>
+  <div class="nav-r">
+    <a href="https://discord.gg/UegEWdvk3" target="_blank" class="btn-login">Log in</a>
+    <a href="https://discord.gg/UegEWdvk3" target="_blank" class="btn-order-nav">Order Now</a>
+  </div>
+  <button class="burger" id="burger">☰</button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mob-menu" id="mobMenu">
+  <a href="#hero">Home</a>
+  <a href="#services">Services</a>
+  <a href="#python">Finances</a>
+  <a href="#contact">Contacts</a>
+  <a href="https://discord.gg/UegEWdvk3" target="_blank" style="color:var(--gold2);margin-top:8px">⚔ Order Now →</a>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="hero" style="padding:0">
+  <div class="hbg"></div>
+  <div class="fog"></div>
+  <div class="castle"></div>
+  <div id="stars"></div>
+  <span class="rune r1">⚜</span>
+  <span class="rune r2">✦</span>
+  <span class="rune r3">⚔</span>
+  <span class="rune r4">⚜</span>
+
+  <div class="hcontent">
+    <div class="crown-wrap">
+      <svg class="crown" viewBox="0 0 100 70" fill="none">
+        <defs>
+          <filter id="cgf" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3.5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <linearGradient id="cgrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fff"/>
+            <stop offset="55%" stop-color="#b8d4ff"/>
+            <stop offset="100%" stop-color="#6080cc"/>
+          </linearGradient>
+        </defs>
+        <g filter="url(#cgf)">
+          <path d="M10 55L90 55L85 35L70 50L50 10L30 50L15 35Z" fill="rgba(150,180,255,0.07)" stroke="url(#cgrad)" stroke-width="1.5" stroke-linejoin="round"/>
+          <rect x="8" y="55" width="84" height="8" rx="1" fill="none" stroke="rgba(200,220,255,0.7)" stroke-width="1.2"/>
+          <circle cx="50" cy="10" r="3.5" fill="rgba(200,220,255,0.9)" stroke="white" stroke-width=".8"/>
+          <circle cx="30" cy="50" r="2.5" fill="rgba(180,200,255,0.8)"/>
+          <circle cx="70" cy="50" r="2.5" fill="rgba(180,200,255,0.8)"/>
+          <circle cx="25" cy="59" r="1.5" fill="rgba(200,220,255,0.6)"/>
+          <circle cx="50" cy="59" r="1.5" fill="rgba(200,220,255,0.6)"/>
+          <circle cx="75" cy="59" r="1.5" fill="rgba(200,220,255,0.6)"/>
+        </g>
+      </svg>
+      <div class="crown-halo"></div>
+    </div>
+
+    <h1 class="htitle">
+      <span class="lt" style="--i:0">D</span><span class="lt" style="--i:1">e</span><span class="lt" style="--i:2">v</span><span class="lt" style="--i:3">F</span><span class="lt" style="--i:4">o</span><span class="lt" style="--i:5">r</span><span class="lt" style="--i:6">g</span><span class="lt" style="--i:7">e</span>
+    </h1>
+
+    <div class="htag">
+      <div class="ol"></div>
+      <span>FORGE YOUR DIGITAL LEGACY</span>
+      <div class="ol r"></div>
+    </div>
+
+    <div class="hbadges">
+      <div class="badge">⚔ Websites</div>
+      <div class="badge">🤖 Discord Bots</div>
+      <div class="badge">📱 Applications</div>
+    </div>
+
+    <div class="hcta">
+      <a href="https://discord.gg/UegEWdvk3" target="_blank" class="btn-primary">
+        <span>⚔</span> Commander Maintenant
+      </a>
+      <a href="#services" class="btn-secondary">Voir les Services</a>
+    </div>
+  </div>
+
+  <div class="scroll-ind">
+    <div class="s-line"></div>
+    <span>SCROLL</span>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats" id="statsBar">
+  <div class="sitem">
+    <div class="snum-wrap"><span class="snum" data-t="150">0</span><span class="splus">+</span></div>
+    <span class="slabel">Projets Livrés</span>
+  </div>
+  <span class="sdiv">⚜</span>
+  <div class="sitem">
+    <div class="snum-wrap"><span class="snum" data-t="98">0</span><span class="splus">%</span></div>
+    <span class="slabel">Clients Satisfaits</span>
+  </div>
+  <span class="sdiv">⚜</span>
+  <div class="sitem">
+    <div class="snum-wrap"><span class="snum" data-t="24">0</span><span class="splus">h</span></div>
+    <span class="slabel">Support Réactif</span>
+  </div>
+  <span class="sdiv">⚜</span>
+  <div class="sitem">
+    <div class="snum-wrap"><span class="snum" data-t="3">0</span><span class="splus"></span></div>
+    <span class="slabel">Services Disponibles</span>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="sec-hd">
+    <div class="sec-pre">✦ NOS OFFRES ✦</div>
+    <h2 class="sec-title">Services</h2>
+    <div class="title-orn"><div class="tol"></div><div class="tdiam"></div><div class="tol"></div></div>
+  </div>
+  <div class="cgrid">
+
+    <!-- Website -->
+    <div class="card cgold" data-delay="0">
+      <div class="cglow"></div>
+      <div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>
+      <div class="cbadge">POPULAIRE</div>
+      <div class="cicon-wrap">
+        <div class="cicon">
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="1.5"/><path d="M8 21h8M12 17v4M6 7h12M6 11h8"/></svg>
+        </div>
+        <div class="cring"></div>
+      </div>
+      <div class="ctitle">Websites</div>
+      <div class="cprice"><span class="cp-from">à partir de</span><span class="cp-val">10€</span></div>
+      <ul class="cfeats">
+        <li>✓ Design sur mesure</li>
+        <li>✓ Responsive mobile</li>
+        <li>✓ Animations avancées</li>
+        <li>✓ SEO optimisé</li>
+        <li>✓ Livraison rapide</li>
+      </ul>
+      <a href="https://discord.gg/UegEWdvk3" target="_blank" class="cbtn"><span class="cshimmer"></span>Commander ⚔</a>
+    </div>
+
+    <!-- Discord Bot -->
+    <div class="card ccyan" data-delay="140">
+      <div class="cglow"></div>
+      <div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>
+      <div class="cicon-wrap">
+        <div class="cicon">
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.974 19.974 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg>
+        </div>
+        <div class="cring"></div>
+      </div>
+      <div class="ctitle">Discord Bots</div>
+      <div class="cprice"><span class="cp-from">à partir de</span><span class="cp-val">7€</span></div>
+      <ul class="cfeats">
+        <li>✓ Modération auto</li>
+        <li>✓ Commandes custom</li>
+        <li>✓ Système de niveaux</li>
+        <li>✓ Music & jeux</li>
+        <li>✓ Support 24/7</li>
+      </ul>
+      <a href="https://discord.gg/UegEWdvk3" target="_blank" class="cbtn"><span class="cshimmer"></span>Commander ⚔</a>
+    </div>
+
+    <!-- Applications -->
+    <div class="card ccyan" data-delay="280">
+      <div class="cglow"></div>
+      <div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>
+      <div class="cicon-wrap">
+        <div class="cicon">
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01M9 6h6M9 10h6M9 14h3"/></svg>
+        </div>
+        <div class="cring"></div>
+      </div>
+      <div class="ctitle">Applications</div>
+      <div class="cprice"><span class="cp-from">à partir de</span><span class="cp-val">5€</span></div>
+      <ul class="cfeats">
+        <li>✓ iOS & Android</li>
+        <li>✓ Interface intuitive</li>
+        <li>✓ Performance optimale</li>
+        <li>✓ Backend inclus</li>
+        <li>✓ Mises à jour</li>
+      </ul>
+      <a href="https://discord.gg/UegEWdvk3" target="_blank" class="cbtn"><span class="cshimmer"></span>Commander ⚔</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- PYTHON SECTION -->
+<section class="py-section" id="python">
+  <div class="sec-hd">
+    <div class="sec-pre">✦ EXEMPLES DE CODE ✦</div>
+    <h2 class="sec-title">Scripts Python</h2>
+    <div class="title-orn"><div class="tol"></div><div class="tdiam"></div><div class="tol"></div></div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" data-tab="bot">Discord Bot</button>
+    <button class="tab" data-tab="scraper">Web Scraper</button>
+    <button class="tab" data-tab="api">API Client</button>
+  </div>
+  <div class="cpanels">
+
+    <div class="cpanel on" id="p-bot">
+      <div class="code-hdr">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="fname">discord_bot.py</span>
+        <button class="copybtn" data-id="c-bot">⎘ Copier</button>
+      </div>
+      <div class="codeblock"><code id="c-bot"></code></div>
+    </div>
+
+    <div class="cpanel" id="p-scraper">
+      <div class="code-hdr">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="fname">web_scraper.py</span>
+        <button class="copybtn" data-id="c-scraper">⎘ Copier</button>
+      </div>
+      <div class="codeblock"><code id="c-scraper"></code></div>
+    </div>
+
+    <div class="cpanel" id="p-api">
+      <div class="code-hdr">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="fname">api_client.py</span>
+        <button class="copybtn" data-id="c-api">⎘ Copier</button>
+      </div>
+      <div class="codeblock"><code id="c-api"></code></div>
+    </div>
+
+  </div>
+  <div class="buy-wrap">
+    <p class="buy-desc">Ces scripts sont disponibles à la commande — rejoins Discord pour acheter.</p>
+    <a href="https://discord.gg/UegEWdvk3" target="_blank" class="btn-discord">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.974 19.974 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg>
+      Rejoindre Discord & Acheter
+    </a>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="sec-hd">
+    <div class="sec-pre">✦ NOUS CONTACTER ✦</div>
+    <h2 class="sec-title">Prêt à Forger ?</h2>
+    <div class="title-orn"><div class="tol"></div><div class="tdiam"></div><div class="tol"></div></div>
+  </div>
+  <div class="cgrid3">
+    <div class="ccard" data-delay="0">
+      <div class="cico">💬</div>
+      <div class="ctit">Discord</div>
+      <div class="cdesc">Support instantané, commandes et communauté active.</div>
+      <a href="https://discord.gg/UegEWdvk3" target="_blank" class="btn-contact">Rejoindre →</a>
+    </div>
+    <div class="ccard" data-delay="130">
+      <div class="cico">⚔</div>
+      <div class="ctit">Commander</div>
+      <div class="cdesc">Place ta commande directement via notre serveur Discord.</div>
+      <a href="https://discord.gg/UegEWdvk3" target="_blank" class="btn-contact">Commander →</a>
+    </div>
+    <div class="ccard" data-delay="260">
+      <div class="cico">💰</div>
+      <div class="ctit">Paiement</div>
+      <div class="cdesc">Paiement sécurisé après validation de ton devis.</div>
+      <a href="https://discord.gg/UegEWdvk3" target="_blank" class="btn-contact">Payer →</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="ft">
+    <div>
+      <div class="fl-logo">DevForge</div>
+      <div class="fl-tag">Forge Your Digital Legacy</div>
+    </div>
+    <div class="fl-links">
+      <div class="fl-col">
+        <div class="fl-htitle">Services</div>
+        <a href="https://discord.gg/UegEWdvk3" target="_blank">Websites</a>
+        <a href="https://discord.gg/UegEWdvk3" target="_blank">Discord Bots</a>
+        <a href="https://discord.gg/UegEWdvk3" target="_blank">Applications</a>
+      </div>
+      <div class="fl-col">
+        <div class="fl-htitle">Commander</div>
+        <a href="https://discord.gg/UegEWdvk3" target="_blank">Order Now</a>
+        <a href="https://discord.gg/UegEWdvk3" target="_blank">Payer</a>
+        <a href="https://discord.gg/UegEWdvk3" target="_blank">Support</a>
+      </div>
+    </div>
+    <div class="fl-soc">
+      <div class="fl-htitle">Réseaux</div>
+      <div class="srow">
+        <a href="https://discord.gg/UegEWdvk3" target="_blank" class="slink" title="Discord">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.974 19.974 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg>
+        </a>
+        <a href="#" class="slink" title="Facebook"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+        <a href="#" class="slink" title="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+        <a href="#" class="slink" title="TikTok"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg></a>
+        <a href="#" class="slink" title="YouTube"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 00-1.95 1.96A29 29 0 001 12a29 29 0 00.46 5.58A2.78 2.78 0 003.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.4a2.78 2.78 0 001.95-1.96A29 29 0 0023 12a29 29 0 00-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#050810"/></svg></a>
+        <a href="#" class="slink" title="X"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+      </div>
+    </div>
+  </div>
+  <div class="fb">
+    <span class="fcopy">© 2025 DevForge. Tous droits réservés.</span>
+    <a href="https://discord.gg/UegEWdvk3" target="_blank" class="fdiscord">Rejoindre Discord ↗</a>
+  </div>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+/* ══ CURSOR ══ */
+const cur=document.getElementById('cur'),cur2=document.getElementById('cur2');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+(function loop(){
+  cur.style.cssText=`left:${mx}px;top:${my}px`;
+  rx+=(mx-rx)*.13;ry+=(my-ry)*.13;
+  cur2.style.cssText=`left:${rx}px;top:${ry}px`;
+  requestAnimationFrame(loop);
+})();
+document.querySelectorAll('a,button').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.transform='translate(-50%,-50%) scale(2.2)';cur2.style.opacity='0'});
+  el.addEventListener('mouseleave',()=>{cur.style.transform='translate(-50%,-50%) scale(1)';cur2.style.opacity='1'});
+});
+
+/* ══ PARTICLES ══ */
+const canvas=document.getElementById('pc'),ctx=canvas.getContext('2d');
+let W=canvas.width=innerWidth,H=canvas.height=innerHeight;
+window.addEventListener('resize',()=>{W=canvas.width=innerWidth;H=canvas.height=innerHeight});
+const pts=Array.from({length:75},()=>({
+  x:Math.random()*W,y:Math.random()*H,
+  sx:(Math.random()-.5)*.28,sy:-Math.random()*.38-.08,
+  sz:Math.random()*1.7+.3,
+  c:Math.random()>.55?`rgba(201,168,76,${(Math.random()*.35+.08).toFixed(2)})`:`rgba(0,180,255,${(Math.random()*.2+.04).toFixed(2)})`
+}));
+(function ap(){
+  ctx.clearRect(0,0,W,H);
+  pts.forEach((p,i)=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,Math.PI*2);
+    ctx.fillStyle=p.c;ctx.fill();
+    p.x+=p.sx;p.y+=p.sy;
+    if(p.y<-5||p.x<-5||p.x>W+5){pts[i]={x:Math.random()*W,y:H+5,sx:(Math.random()-.5)*.28,sy:-Math.random()*.38-.08,sz:Math.random()*1.7+.3,c:pts[i].c}}
+  });
+  requestAnimationFrame(ap);
+})();
+
+/* ══ STARS ══ */
+const sc=document.getElementById('stars');
+// Drifting stars
+for(let i=0;i<140;i++){
+  const s=document.createElement('div');s.className='star';
+  const sz=Math.random()*2.2+.3;
+  const dx=(Math.random()-0.5)*18, dy=(Math.random()-0.5)*14;
+  s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*65}%;width:${sz}px;height:${sz}px;--d:${1.5+Math.random()*4.5}s;--dl:-${Math.random()*6}s;--dd:${6+Math.random()*12}s;--dld:-${Math.random()*10}s;--dx:${dx}px;--dy:${dy}px`;
+  sc.appendChild(s);
+}
+// Shooting stars
+for(let i=0;i<7;i++){
+  const ss=document.createElement('div');ss.className='shooting-star';
+  const len=80+Math.random()*180;
+  const ang=-15-Math.random()*25;
+  ss.style.cssText=`left:${20+Math.random()*60}%;top:${Math.random()*50}%;width:${len}px;--sd:${5+Math.random()*10}s;--sdl:-${Math.random()*12}s;--ang:${ang}deg;--sw:${len+200}`;
+  sc.appendChild(ss);
+}
+
+/* ══ NAVBAR ══ */
+const navEl=document.getElementById('nav');
+window.addEventListener('scroll',()=>{navEl.classList.toggle('scrolled',scrollY>40)});
+
+/* ══ MOBILE MENU ══ */
+document.getElementById('burger').addEventListener('click',function(){
+  const m=document.getElementById('mobMenu');
+  m.classList.toggle('open');
+  this.textContent=m.classList.contains('open')?'✕':'☰';
+});
+document.querySelectorAll('.mob-menu a').forEach(a=>a.addEventListener('click',()=>{
+  document.getElementById('mobMenu').classList.remove('open');
+  document.getElementById('burger').textContent='☰';
+}));
+
+/* ══ PARALLAX ══ */
+window.addEventListener('scroll',()=>{
+  const y=scrollY;
+  document.querySelector('.castle').style.transform=`translateY(${y*.14}px)`;
+  document.querySelectorAll('.rune').forEach((r,i)=>r.style.transform=`translateY(${y*(.07+i*.015)}px)`);
+});
+
+/* ══ SCROLL REVEAL ══ */
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting)return;
+    const d=parseInt(e.target.dataset.delay||0);
+    setTimeout(()=>e.target.classList.add('vis'),d);
+    obs.unobserve(e.target);
+  });
+},{threshold:.1});
+document.querySelectorAll('.card,.ccard').forEach(el=>obs.observe(el));
+
+/* ══ STATS COUNTER ══ */
+const sobs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting)return;
+    const el=e.target,t=parseInt(el.dataset.t),s=Math.max(1,Math.ceil(t/55));
+    let c=0;
+    const iv=setInterval(()=>{c=Math.min(c+s,t);el.textContent=c;if(c>=t)clearInterval(iv)},22);
+    sobs.unobserve(el);
+  });
+},{threshold:.5});
+document.querySelectorAll('.snum').forEach(el=>sobs.observe(el));
+
+/* ══ CARD TILT ══ */
+document.querySelectorAll('.card').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+    card.style.transform=`translateY(-8px) rotateY(${x*6}deg) rotateX(${-y*4}deg)`;
+    card.style.transition='transform .08s ease,box-shadow .4s';
+  });
+  card.addEventListener('mouseleave',()=>{
+    card.style.transform='';
+    card.style.transition='transform .5s ease,box-shadow .4s';
+  });
+});
+
+/* ══ TABS ══ */
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+    document.querySelectorAll('.cpanel').forEach(p=>p.classList.remove('on'));
+    btn.classList.add('on');
+    document.getElementById('p-'+btn.dataset.tab).classList.add('on');
+  });
+});
+
+/* ══ SYNTAX HIGHLIGHT ══ */
+function hl(code){
+  return code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/(#.*$)/gm,'<span class="co">$1</span>')
+    .replace(/(".*?"|'.*?')/g,'<span class="st">$1</span>')
+    .replace(/\b(\d+\.?\d*)\b/g,'<span class="nu">$1</span>')
+    .replace(/\b(import|from|def|class|return|if|else|elif|for|while|in|not|and|or|True|False|None|with|as|try|except|raise|pass|break|continue|async|await|lambda|yield)\b/g,'<span class="kw">$1</span>')
+    .replace(/\b(print|range|len|str|int|float|list|dict|set|open|super|self|type|isinstance|enumerate|zip|map|filter|sorted|bot|discord|commands|asyncio|requests|json|logging)\b/g,'<span class="fn">$1</span>')
+    .replace(/@(\w+)/g,'<span class="de">@$1</span>');
+}
+
+const BOT_CODE=`# DevForge — discord_bot.py
+# Commander : discord.gg/UegEWdvk3
+
+import discord
+from discord.ext import commands
+from discord import app_commands
+import asyncio, datetime, logging, os
+
+TOKEN  = os.getenv("DISCORD_TOKEN", "VOTRE_TOKEN_ICI")
+PREFIX = "!"
+logging.basicConfig(level=logging.INFO)
+
+intents = discord.Intents.default()
+intents.message_content = True
+intents.members = True
+
+bot = commands.Bot(command_prefix=PREFIX, intents=intents)
+
+@bot.event
+async def on_ready():
+    await bot.tree.sync()
+    await bot.change_presence(activity=discord.Activity(
+        type=discord.ActivityType.watching, name="⚔ DevForge | /help"
+    ))
+    print(f"[DevForge] {bot.user} prêt !")
+
+@bot.event
+async def on_member_join(member):
+    ch = discord.utils.get(member.guild.text_channels, name="bienvenue")
+    if ch:
+        embed = discord.Embed(
+            title=f"⚔ Bienvenue {member.name} !",
+            description="Bienvenue sur le serveur DevForge !",
+            color=0xC9A84C
+        )
+        embed.set_thumbnail(url=member.display_avatar.url)
+        await ch.send(embed=embed)
+
+@bot.tree.command(name="ping", description="Latence du bot")
+async def ping(interaction: discord.Interaction):
+    await interaction.response.send_message(
+        f"🏓 Pong ! {round(bot.latency*1000)}ms", ephemeral=True
+    )
+
+@bot.tree.command(name="prices", description="Tarifs DevForge")
+async def prices(interaction: discord.Interaction):
+    embed = discord.Embed(title="⚔ Tarifs DevForge", color=0xC9A84C)
+    embed.add_field(name="🌐 Website",     value="à partir de 10€", inline=False)
+    embed.add_field(name="🤖 Discord Bot", value="à partir de 7€",  inline=False)
+    embed.add_field(name="📱 Application", value="à partir de 5€",  inline=False)
+    embed.add_field(name="💬 Commander",   value="discord.gg/UegEWdvk3", inline=False)
+    await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name="clear", description="Supprimer des messages")
+@app_commands.describe(amount="Nombre de messages")
+@app_commands.checks.has_permissions(manage_messages=True)
+async def clear(interaction: discord.Interaction, amount: int):
+    await interaction.channel.purge(limit=min(amount, 100))
+    await interaction.response.send_message(
+        f"🗑 {amount} messages supprimés.", ephemeral=True
+    )
+
+@bot.tree.command(name="kick", description="Expulser un membre")
+@app_commands.checks.has_permissions(kick_members=True)
+async def kick(interaction: discord.Interaction, member: discord.Member, reason: str = "Aucune"):
+    await member.kick(reason=reason)
+    await interaction.response.send_message(f"👢 {member.mention} expulsé. Raison: {reason}")
+
+@bot.tree.command(name="ban", description="Bannir un membre")
+@app_commands.checks.has_permissions(ban_members=True)
+async def ban(interaction: discord.Interaction, member: discord.Member, reason: str = "Aucune"):
+    await member.ban(reason=reason)
+    await interaction.response.send_message(f"🔨 {member.mention} banni. Raison: {reason}")
+
+@bot.tree.command(name="mute", description="Muter un membre")
+@app_commands.describe(minutes="Durée en minutes")
+@app_commands.checks.has_permissions(moderate_members=True)
+async def mute(interaction: discord.Interaction, member: discord.Member, minutes: int = 10, reason: str = "Aucune"):
+    await member.timeout(datetime.timedelta(minutes=minutes), reason=reason)
+    await interaction.response.send_message(f"🔇 {member.mention} muté {minutes}min. Raison: {reason}")
+
+if __name__ == "__main__":
+    bot.run(TOKEN)`;
+
+const SCRAPER_CODE=`# DevForge — web_scraper.py
+# Commander : discord.gg/UegEWdvk3
+
+import requests
+from bs4 import BeautifulSoup
+import json, time, csv, random, logging
+from dataclasses import dataclass, asdict
+from typing import List, Optional
+
+logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(message)s")
+log = logging.getLogger("DevForgeScraper")
+
+@dataclass
+class Item:
+    title:       str
+    price:       Optional[str]
+    description: Optional[str]
+    rating:      Optional[float]
+    url:         str
+
+class DevForgeScraper:
+    AGENTS = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15",
+    ]
+
+    def __init__(self, base_url, delay=1.5, max_retries=3):
+        self.base_url    = base_url.rstrip("/")
+        self.delay       = delay
+        self.max_retries = max_retries
+        self.results     = []
+        self.session     = requests.Session()
+
+    def fetch(self, url):
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                headers = {"User-Agent": random.choice(self.AGENTS)}
+                r = self.session.get(url, headers=headers, timeout=12)
+                r.raise_for_status()
+                log.info(f"✅ {url}")
+                return BeautifulSoup(r.text, "html.parser")
+            except requests.RequestException as e:
+                log.warning(f"Tentative {attempt}/{self.max_retries}: {e}")
+                if attempt < self.max_retries:
+                    time.sleep(self.delay * attempt)
+        return None
+
+    def parse(self, soup, url):
+        title = soup.select_one("h1") or soup.select_one("title")
+        price = soup.select_one(".price, [itemprop='price']")
+        desc  = soup.select_one(".description, [itemprop='description']")
+        rate  = soup.select_one("[itemprop='ratingValue']")
+        return Item(
+            title       = title.get_text(strip=True) if title else "Sans titre",
+            price       = price.get_text(strip=True) if price else None,
+            description = desc.get_text(strip=True)[:400] if desc else None,
+            rating      = float(rate.get("content",0)) if rate else None,
+            url         = url
+        )
+
+    def scrape(self, pages=5):
+        log.info(f"Démarrage: {pages} pages")
+        for page in range(1, pages + 1):
+            url  = f"{self.base_url}?page={page}"
+            soup = self.fetch(url)
+            if not soup:
+                continue
+            item = self.parse(soup, url)
+            self.results.append(item)
+            log.info(f"Page {page}/{pages} OK")
+            time.sleep(self.delay + random.uniform(0, .5))
+        return self.results
+
+    def save_json(self, filename="results.json"):
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump([asdict(r) for r in self.results], f, indent=2, ensure_ascii=False)
+        log.info(f"Sauvegardé → {filename}")
+
+    def save_csv(self, filename="results.csv"):
+        if not self.results:
+            return
+        with open(filename, "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=["title","price","description","rating","url"])
+            w.writeheader()
+            w.writerows([asdict(r) for r in self.results])
+        log.info(f"Sauvegardé → {filename}")
+
+if __name__ == "__main__":
+    s = DevForgeScraper("https://example.com", delay=1.5)
+    s.scrape(pages=10)
+    s.save_json("produits.json")
+    s.save_csv("produits.csv")
+    print(f"✅ {len(s.results)} éléments extraits")
+    print("🛒 Commander: discord.gg/UegEWdvk3")`;
+
+const API_CODE=`# DevForge — api_client.py
+# Commander : discord.gg/UegEWdvk3
+
+import requests, json, time, logging
+from typing import Any, Dict, List, Optional, Union
+from functools import wraps
+
+log = logging.getLogger("DevForgeAPI")
+logging.basicConfig(level=logging.INFO)
+
+def retry(max_tries=3, delay=1.0):
+    def deco(fn):
+        @wraps(fn)
+        def wrapper(*a, **kw):
+            for i in range(1, max_tries+1):
+                try:
+                    return fn(*a, **kw)
+                except Exception as e:
+                    log.warning(f"Tentative {i}/{max_tries}: {e}")
+                    if i < max_tries:
+                        time.sleep(delay * i)
+                    else:
+                        raise
+        return wrapper
+    return deco
+
+class DevForgeAPIClient:
+    """Client API REST universel avec auth, retry et pagination."""
+
+    def __init__(self, base_url, api_key="", version="v1", timeout=15):
+        self.base_url = base_url.rstrip("/")
+        self.api_key  = api_key
+        self.version  = version
+        self.timeout  = timeout
+        self.session  = requests.Session()
+        self.session.headers.update({
+            "Content-Type":  "application/json",
+            "Accept":        "application/json",
+            "X-API-Version": version,
+        })
+        if api_key:
+            self.session.headers["Authorization"] = f"Bearer {api_key}"
+
+    def _url(self, endpoint):
+        return f"{self.base_url}/api/{self.version}/{endpoint.lstrip('/')}"
+
+    def _handle(self, r):
+        if r.status_code == 401:
+            raise PermissionError("Non autorisé — vérifier l'API key")
+        if r.status_code == 429:
+            raise ConnectionError(f"Rate limit — attendre {r.headers.get('Retry-After','?')}s")
+        r.raise_for_status()
+        return r.json() if r.status_code != 204 else None
+
+    @retry(3)
+    def get(self, endpoint, params=None):
+        return self._handle(self.session.get(self._url(endpoint), params=params, timeout=self.timeout))
+
+    @retry(3)
+    def post(self, endpoint, data=None):
+        return self._handle(self.session.post(self._url(endpoint), json=data, timeout=self.timeout))
+
+    @retry(2)
+    def put(self, endpoint, data):
+        return self._handle(self.session.put(self._url(endpoint), json=data, timeout=self.timeout))
+
+    def delete(self, endpoint):
+        r = self.session.delete(self._url(endpoint), timeout=self.timeout)
+        return r.status_code in (200, 204)
+
+    def get_all(self, endpoint, page_size=100):
+        """Récupère toutes les pages automatiquement."""
+        all_data, page = [], 1
+        while True:
+            res = self.get(endpoint, {"page": page, "per_page": page_size})
+            if not res:
+                break
+            items = res if isinstance(res, list) else res.get("data", res.get("results", []))
+            if not items:
+                break
+            all_data.extend(items)
+            if len(items) < page_size:
+                break
+            page += 1
+        log.info(f"{len(all_data)} éléments récupérés sur {page-1} pages")
+        return all_data
+
+    def health_check(self):
+        try:
+            r = self.get("health")
+            return isinstance(r, dict) and r.get("status") in ("ok","healthy","up")
+        except Exception:
+            return False
+
+    def get_products(self, category=None):
+        return self.get("products", {"category": category} if category else None)
+
+    def create_order(self, product_id, qty=1, **kw):
+        return self.post("orders", {"product_id": product_id, "quantity": qty, **kw})
+
+    def get_user(self, user_id):
+        return self.get(f"users/{user_id}")
+
+    def update_user(self, user_id, data):
+        return self.put(f"users/{user_id}", data)
+
+if __name__ == "__main__":
+    client = DevForgeAPIClient(
+        base_url = "https://api.example.com",
+        api_key  = "YOUR_API_KEY_HERE",
+        version  = "v1"
+    )
+    print("Santé:", client.health_check())
+    products = client.get_products()
+    print(f"Produits: {len(products)}")
+    order = client.create_order(product_id=1, qty=1)
+    print(f"Commande: #{order.get('id')}")
+    print("🛒 Commander: discord.gg/UegEWdvk3")`;
+
+document.getElementById('c-bot').innerHTML     = hl(BOT_CODE);
+document.getElementById('c-scraper').innerHTML = hl(SCRAPER_CODE);
+document.getElementById('c-api').innerHTML     = hl(API_CODE);
+
+/* ══ COPY ══ */
+document.querySelectorAll('.copybtn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const id=btn.dataset.id;
+    const raw={
+      'c-bot':BOT_CODE,
+      'c-scraper':SCRAPER_CODE,
+      'c-api':API_CODE
+    }[id]||'';
+    navigator.clipboard.writeText(raw).then(()=>{
+      btn.textContent='✓ Copié !';
+      setTimeout(()=>btn.textContent='⎘ Copier',2200);
+      toast('Code copié !');
+    });
+  });
+});
+
+/* ══ TOAST ══ */
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+/* ══ SMOOTH SCROLL ══ */
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const el=document.querySelector(a.getAttribute('href'));
+    if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+});
+
+/* ══ MUSIC PLAYER ══ */
+const TRACKS=[
+  {title:'Dark Fantasy Theme', src:''},
+  {title:'Medieval Forge',     src:''},
+  {title:"Dragon's Lair",      src:''},
+];
+// 👆 Remplace src:'' par src:'ton_fichier.mp3' pour chaque piste
+
+let idx=0,playing=false;
+const aud=document.getElementById('aud');
+const mpFill=document.getElementById('mpFill');
+const mpBar=document.getElementById('mpBar');
+const mpCur=document.getElementById('mpCur');
+const mpDur=document.getElementById('mpDur');
+const mpTrack=document.getElementById('mpTrack');
+const mpVol=document.getElementById('mpVol');
+const viz=document.getElementById('viz');
+
+document.getElementById('mpToggle').addEventListener('click',()=>{
+  document.getElementById('mp').classList.toggle('closed');
+  document.getElementById('mp').classList.toggle('open');
+});
+
+function loadTrack(i){
+  const t=TRACKS[i];
+  mpTrack.textContent=t.title;
+  aud.src=t.src;
+  aud.volume=parseFloat(mpVol.value);
+  mpFill.style.width='0%';
+  mpCur.textContent='0:00';
+  if(playing)aud.play().catch(()=>toast('Ajoute un fichier MP3 dans TRACKS[].src'));
+}
+
+document.getElementById('mpPlay').addEventListener('click',()=>{
+  if(aud.paused){
+    if(!aud.src||aud.src===window.location.href){toast('Ajoute un fichier MP3 dans le code → TRACKS[0].src');return}
+    aud.play().catch(()=>toast('Erreur lecture audio'));
+    playing=true;
+    document.getElementById('mpPlay').textContent='⏸';
+    viz.classList.add('on');
+  }else{
+    aud.pause();playing=false;
+    document.getElementById('mpPlay').textContent='▶';
+    viz.classList.remove('on');
+  }
+});
+document.getElementById('mpPrev').addEventListener('click',()=>{idx=(idx-1+TRACKS.length)%TRACKS.length;loadTrack(idx)});
+document.getElementById('mpNext').addEventListener('click',()=>{idx=(idx+1)%TRACKS.length;loadTrack(idx)});
+aud.addEventListener('ended',()=>{idx=(idx+1)%TRACKS.length;loadTrack(idx)});
+aud.addEventListener('timeupdate',()=>{
+  if(!aud.duration)return;
+  mpFill.style.width=(aud.currentTime/aud.duration*100)+'%';
+  mpCur.textContent=fmt(aud.currentTime);
+  mpDur.textContent=fmt(aud.duration);
+});
+mpBar.addEventListener('click',e=>{
+  const r=mpBar.getBoundingClientRect();
+  aud.currentTime=(e.clientX-r.left)/r.width*aud.duration;
+});
+mpVol.addEventListener('input',()=>aud.volume=parseFloat(mpVol.value));
+function fmt(s){if(isNaN(s))return'0:00';return`${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`}
+
+loadTrack(0);
+</script>
+</body>
+</html>
